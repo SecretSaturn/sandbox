@@ -6,6 +6,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { Connection, PublicKey } from '@solana/web3.js';
+import { arrayify, hexlify, SigningKey, keccak256, recoverPublicKey, computeAddress } from "ethers/lib/utils";
+import {bytes, bytes_to_base64, json_to_bytes, sha256, concat, text_to_bytes, base64_to_bytes} from '@blake.regalia/belt';
 
 import {
   createAddressLookupTable,
@@ -46,7 +48,7 @@ const StyledApp = styled.div`
 const NETWORK = 'https://phantom-phantom-f0ad.mainnet.rpcpool.com/';
 const provider = getProvider();
 const connection = new Connection(NETWORK);
-const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
+const message = 'test';
 
 // =============================================================================
 // Typedefs
@@ -324,12 +326,25 @@ const useProps = (): Props => {
     if (!provider) return;
 
     try {
-      const signedMessage = await signMessage(provider, message);
+      const payloadHashText = bytes_to_base64(await sha256(concat([
+        //text_to_bytes("\x19Ethereum Signed Message:\n32"),
+        text_to_bytes(message),
+    ])))
+      const signedMessage = await signMessage(provider, text_to_bytes(payloadHashText));
       createLog({
         status: 'success',
         method: 'signMessage',
         message: `Message signed: ${JSON.stringify(signedMessage)}`,
       });
+      console.log(signedMessage)
+      console.log(message)
+      //@ts-ignore
+      console.log(bytes_to_base64(signedMessage.publicKey.toBytes()))
+      //@ts-ignore
+      console.log(bytes_to_base64(signedMessage.signature))
+      //@ts-ignore
+      console.log(bytes_to_base64(text_to_bytes("test")))
+      console.log(payloadHashText)
       return signedMessage;
     } catch (error) {
       createLog({
